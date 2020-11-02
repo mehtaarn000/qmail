@@ -4,6 +4,12 @@ A terminal utility to allow users to have a temporary email inbox right from the
 ## Installation
 `curl -sL https://raw.githubusercontent.com/mehtaarn000/qmail/master/qmail.sh >> qmail.sh && chmod +x qmail.sh && mv qmail.sh /usr/local/bin/qmail`
 
+## Dependencies
+[`jq`](https://github.com/stedolan/jq)
+
+[`w3m`](http://w3m.sourceforge.net/)
+
+
 ## Usage
 qmail options:
 
@@ -26,11 +32,9 @@ Next, using an actual email service (such as Gmail or Outlook), send an email to
 Wait a few seconds, and then check your inbox with `qmail -i`
 
 Output:
-`-------------------Inbox of s133chze@1secmail.net-------------------
-91775417        From: REDACTED       This is a test email       2020-11-02 20:24:50
---------------------------------------------------------------------`
+![View Inbox](https://github.com/mehtaarn000/qmail/blob/main/images/viewinbox.png)
 
 Finally, read the email with `qmail -r 91775417` (the number at the end is the message ID that you see in the inbox)
 
 Output:
-![View Email](https://github.com/mehtaarn000/qmail/blob/master/images/viewemail.jpg?raw=true)
+![View Email](https://github.com/mehtaarn000/qmail/blob/main/images/viewemail.png)
