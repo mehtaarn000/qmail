@@ -4,33 +4,27 @@ random_email () {
     mkdir_qmail
     #Generate a random email for the user
     USERNAME=$(cat /dev/urandom | LC_ALL=C tr -dc 'a-z1-9' | fold -w 8 | head -n 1)
-    DOMAIN_CHOICE=$(cat /dev/urandom | LC_ALL=C tr -dc '1-2' | fold -w 1 | head -n 1)
-    DOTX_CHOICE=$(cat /dev/urandom | LC_ALL=C tr -dc '1-3' | fold -w 1 | head -n 1)
+    DOMAIN_CHOICE=$(cat /dev/urandom | LC_ALL=C tr -dc '1-3' | fold -w 1 | head -n 1)
 
     if [ $DOMAIN_CHOICE == 1 ]
     then
-        DOMAIN="@1secmail"
-        DOMAINWITHOUTAT="1secmail"
-    else
-        DOMAIN="@wwjmp"
-        DOMAINWITHOUTAT="wwjmp"
-    fi
-    if [ $DOTX_CHOICE == 1 ]
+        DOMAIN="@1secmail.com"
+        DOMAINWITHOUTAT="1secmail.com"
+    elif [ $DOMAIN_CHOICE == 2 ]
     then
-        DOTX=".com"
-    elif [ $DOTX_CHOICE == 2 ]  
-    then
-        DOTX=".net"
+        DOMAIN="@1secmail.org"
+        DOMAINWITHOUTAT="1secmail.org"
     else
-        DOTX=".org"
+        DOMAIN="@1secmail.net"
+        DOMAINWITHOUTAT="1secmail.net"
     fi
-    ADDRESS="$USERNAME$DOMAIN$DOTX"
+    ADDRESS="$USERNAME$DOMAIN"
     cd .qmail
-    :> domain.txt && :> dotx.txt && :> email_addr.txt
+    :> domain.txt && :> email_addr.txt
     echo "qmail: Your temporary email address is: $ADDRESS"
-    echo "$USERNAME" >> email_addr.txt && echo "$DOMAIN" >> domain.txt && echo "$DOTX" >> dotx.txt
+    echo "$USERNAME" >> email_addr.txt && echo "$DOMAIN" >> domain.txt
     cd ..
-    INITINBOXURL="https://www.1secmail.com/api/v1/?action=getMessages&login=$USERNAME&domain=$DOMAINWITHOUTAT$DOTX"
+    INITINBOXURL="https://www.1secmail.com/api/v1/?action=getMessages&login=$USERNAME&domain=$DOMAINWITHOUTAT"
     RESPONSE=$(curl -sL $INITINBOXURL)
 }
 
@@ -39,7 +33,7 @@ mkdir_qmail () {
     then
         mkdir .qmail
         cd .qmail
-        touch email_addr.txt && touch domain.txt && touch dotx.txt
+        touch email_addr.txt && touch domain.txt
         cd ..
         random_email
     fi
@@ -51,9 +45,8 @@ check_inbox () {
     cd .qmail
     EXISTINGEMAILADDR=`cat email_addr.txt`
     EXISTINGDOMAIN=`cat domain.txt`
-    EXISTINGDOTX=`cat dotx.txt`
     WITHOUTAT=${EXISTINGDOMAIN//@}
-    BASE_URL="https://www.1secmail.com/api/v1/?action=getMessages&login=$EXISTINGEMAILADDR&domain=$WITHOUTAT$EXISTINGDOTX"
+    BASE_URL="https://www.1secmail.com/api/v1/?action=getMessages&login=$EXISTINGEMAILADDR&domain=$WITHOUTAT"
 
     #Get emails
     LENGTH=$(curl -sL $BASE_URL | jq length)
@@ -61,12 +54,12 @@ check_inbox () {
 
     #If there are no emails
     then
-        EXISTINGADDR="$EXISTINGEMAILADDR$EXISTINGDOMAIN$EXISTINGDOTX" 
+        EXISTINGADDR="$EXISTINGEMAILADDR$EXISTINGDOMAIN" 
         echo "Inbox of $EXISTINGADDR empty." && exit
 
     #If there are emails
     else
-        EXISTINGADDR="$EXISTINGEMAILADDR$EXISTINGDOMAIN$EXISTINGDOTX"
+        EXISTINGADDR="$EXISTINGEMAILADDR$EXISTINGDOMAIN"
         echo "-------------------Inbox of $EXISTINGADDR-------------------"
     fi
     for (( i=0; i < $LENGTH; ++i ))
@@ -86,7 +79,6 @@ generate_and_store_addr () {
     cd .qmail
     CHECKADDR=`cat email_addr.txt`
     CHECKDOMAIN=`cat domain.txt`
-    CHECKDOTX=`cat dotx.txt`
     cd ..
     random_email
     check_inbox
@@ -98,9 +90,8 @@ view_email () {
     cd .qmail
     EXISTINGEMAILADDR=`cat email_addr.txt`
     EXISTINGDOMAIN=`cat domain.txt`
-    EXISTINGDOTX=`cat dotx.txt`
     WITHOUTAT=${EXISTINGDOMAIN//@}
-    VIEWURL="https://www.1secmail.com/api/v1/?action=readMessage&login=$EXISTINGEMAILADDR&domain=$WITHOUTAT$EXISTINGDOTX&id=$1"
+    VIEWURL="https://www.1secmail.com/api/v1/?action=readMessage&login=$EXISTINGEMAILADDR&domain=$WITHOUTAT&id=$1"
     REQUEST=$(curl -sL $VIEWURL)
     if [[ $REQUEST == "Message not found" ]]
     then
@@ -145,11 +136,10 @@ EOL
 
 echo_addr () {
     mkdir_qmail
-    cd qmail
+    cd .qmail
     EXISTINGEMAILADDR=`cat email_addr.txt`
     EXISTINGDOMAIN=`cat domain.txt`
-    EXISTINGDOTX=`cat dotx.txt`
-    echo $EXISTINGEMAILADDR$EXISTINGDOMAIN$EXISTINGDOTX
+    echo $EXISTINGEMAILADDR$EXISTINGDOMAIN
     cd ..
 }
 
@@ -193,16 +183,17 @@ then
     if  [[ "$CUSTOMDOMAIN" =~ "@" ]]
     then
         echo "qmail: Your custom email address must have an '@'." && exit
-    elif [[ $CUSTOMDOMAIN != "wwjmp" ]] && [[ $CUSTOMDOMAIN != "1secmail" ]]
+    elif [[ $CUSTOMDOMAIN != "1secmail" ]]
     then
-        echo "qmail: Your custom email address's domain must be either: 'wwjmp' or '1secmail'" && exit
+        echo "qmail: Your custom email address's domain must be either: '1secmail'" && exit
     elif [[ $CUSTOMDOTX != "com" ]] && [[ $CUSTOMDOTX != "net" ]] && [[ $CUSTOMDOTX != "org" ]]
     then
         echo "qmail: Your custom email address's domain .___ must be: '.net' or '.org' or '.com'" && exit
     fi
     cd .qmail
-    :> domain.txt && :> dotx.txt && :> email_addr.txt
-    echo $CUSTOMADDR >> email_addr.txt && echo "@$CUSTOMDOMAIN" >> domain.txt && echo ".$CUSTOMDOTX" >> dotx.txt
+    :> domain.txt && :> email_addr.txt
+    echo $CUSTOMADDR >> email_addr.txt && echo "@$CUSTOMDOMAIN.$CUSTOMDOTX" >> domain.txt
+    
 #View Emails
 elif [[ $1 == '-r' ]] || [[ $1 == '--read' ]]
 then
