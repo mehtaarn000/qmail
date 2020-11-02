@@ -2,7 +2,7 @@
 A terminal utility to allow users to have a temporary email inbox right from their command line.
 
 ## Installation
-`curl -sL https://raw.githubusercontent.com/mehtaarn000/qmail/master/qmail.sh >> qmail.sh && chmod +x qmail.sh && mv qmail.sh /usr/local/bin/qmail`
+`curl -sL https://raw.githubusercontent.com/mehtaarn000/qmail/main/qmail.sh >> qmail.sh && chmod +x qmail.sh && mv qmail.sh /usr/local/bin/qmail`
 
 ## Dependencies
 [`jq`](https://github.com/stedolan/jq)
