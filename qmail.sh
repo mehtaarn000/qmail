@@ -1,3 +1,4 @@
+#!/usr/bin/sh
 #IMPORTANT: This is very bad code that I threw together in a single day. Also, this is my first time ever using shell so... ¯\_(ツ)_/¯
 
 random_email () {
