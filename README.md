@@ -38,4 +38,4 @@ Finally, read the email with `qmail -r 91775417` (the number at the end is the m
 ![View Email](https://github.com/mehtaarn000/qmail/blob/main/images/viewemail.png)
 
 ## Extra
-This project is heavily inspired by [sdushantha's tmpmail.](https://github.com/sdushantha/tmpmail)
+This project is heavily inspired by [@sdushantha's tmpmail.](https://github.com/sdushantha/tmpmail)
