@@ -20,6 +20,7 @@ qmail options:
     -c or --custom [Email Address]    store a custom email address
     -i or --inbox                     check inbox
     -r or --read [id] [html option]   view and read message
+    -d or --download [id] [filename]  download an attachment
 
 ## Examples
 First, let's store a new random email address with `qmail -g`.
