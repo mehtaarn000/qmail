@@ -190,7 +190,7 @@ EOM
 #Version
 elif [[ $1 == '-v' ]] || [[ $1 == '--version' ]]
 then
-    echo "qmail v1.0"
+    echo "qmail v2.0"
 
 #Check Inbox
 elif [[ $1 == '-i' ]] || [[ $1 == '--inbox' ]]
