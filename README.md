@@ -15,6 +15,7 @@ qmail options:
 
     -h or --help                      show help page of qmail
     -v or --version                   show version of qmail
+    -u or --update                    update qmail version
     -a or --address                   show the current email address
     -g or --generate                  generate and store new random address
     -c or --custom [Email Address]    store a custom email address

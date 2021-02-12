@@ -178,6 +178,7 @@ cat << EOM
 qmail options:
     -h or --help                      show help page of qmail
     -v or --version                   show version of qmail
+    -u or --update                    update qmail version
     -a or --address                   show the current email address
     -g or --generate                  generate and store new random and email address
     -c or --custom [Email Address]    store a custom email address
@@ -233,7 +234,7 @@ then
         view_email $2
     fi
 
-elif [[ $1 == '--update' ]]
+elif [[ $1 == '-u' ]]  [[ $1 == '--update' ]]
 then
     update
 fi
