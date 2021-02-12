@@ -1,6 +1,3 @@
-#!/usr/bin/sh
-#IMPORTANT: This is very bad code that I threw together in a single day. Also, this is my first time ever using shell so... ¯\_(ツ)_/¯
-
 random_email () {
     mkdir_qmail
     #Generate a random email for the user
@@ -27,6 +24,21 @@ random_email () {
     cd ..
     INITINBOXURL="https://www.1secmail.com/api/v1/?action=getMessages&login=$USERNAME&domain=$DOMAINWITHOUTAT"
     RESPONSE=$(curl -sL $INITINBOXURL)
+}
+
+download_attachment() {
+    EXISTINGEMAILADDR=`cat .qmail/email_addr.txt`
+    EXISTINGDOMAIN=`cat .qmail/domain.txt`
+    WITHOUTAT=${EXISTINGDOMAIN//@}
+    DOWNLOADURL="https://www.1secmail.com/api/v1/?action=download&login=$EXISTINGEMAILADDR&domain=$WITHOUTAT&id=$1&file=$2"
+    echo $DOWNLOADURL
+    DOWNLOAD=$(curl -sL $DOWNLOADURL)
+    if [[ $DOWNLOAD == "" ]]
+    then
+        echo "$0: this attachment does not exist." && exit 2
+    else
+        echo "$DOWNLOAD" >> $2
+    fi
 }
 
 mkdir_qmail () {
@@ -56,7 +68,7 @@ check_inbox () {
     #If there are no emails
     then
         EXISTINGADDR="$EXISTINGEMAILADDR$EXISTINGDOMAIN" 
-        echo "Inbox of $EXISTINGADDR empty." && exit
+        echo "Inbox of $EXISTINGADDR empty." && exit 2
 
     #If there are emails
     else
@@ -111,7 +123,7 @@ view_email () {
     REQUEST=$(curl -sL $VIEWURL)
     if [[ $REQUEST == "Message not found" ]]
     then
-        echo "qmail: Invalid Message ID" && exit 
+        echo "qmail: Invalid Message ID" && exit 2
     fi
     FROM=$(printf %s $REQUEST | jq -r ".from")
     SUBJECT=$(printf %s $REQUEST | jq -r ".subject")
@@ -171,6 +183,7 @@ qmail options:
     -c or --custom [Email Address]    store a custom email address
     -i or --inbox                     check inbox
     -r or --read [id]                 view and read message
+    -d or --download [id] [filename]  download an attachment
 EOM
 
 #Version
@@ -198,13 +211,13 @@ then
     #Validate custom email address
     if  [[ "$CUSTOMDOMAIN" =~ "@" ]]
     then
-        echo "qmail: Your custom email address must have an '@'." && exit
+        echo "qmail: Your custom email address must have an '@'." && exit 2
     elif [[ $CUSTOMDOMAIN != "1secmail" ]]
     then
-        echo "qmail: Your custom email address's domain must be either: '1secmail'" && exit
+        echo "qmail: Your custom email address's domain must be either: '1secmail'" && exit 2
     elif [[ $CUSTOMDOTX != "com" ]] && [[ $CUSTOMDOTX != "net" ]] && [[ $CUSTOMDOTX != "org" ]]
     then
-        echo "qmail: Your custom email address's domain .___ must be: '.net' or '.org' or '.com'" && exit
+        echo "qmail: Your custom email address's domain .___ must be: '.net' or '.org' or '.com'" && exit 2
     fi
     cd .qmail
     :> domain.txt && :> email_addr.txt
@@ -224,6 +237,10 @@ elif [[ $1 == '--update' ]]
 then
     update
 fi
+#Download attachment
+elif [[ $1 == "-d" ]] || [[ $1 == "--download" ]]
+then
+    download_attachment $2 $3
 
 #Display current email address
 elif [[ $1 == '-a' ]] || [[ $1 == '--address' ]]
