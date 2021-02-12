@@ -85,6 +85,21 @@ generate_and_store_addr () {
     check_inbox
 }
 
+update () {
+    mkdir /tmp/qmail
+    GETNEWVERSION=$(curl -sL https://raw.githubusercontent.com/mehtaarn000/qmail/main/qmail.sh)
+    echo "$GETNEWVERSION" > /.qmail/qmail_newversion
+    WHICHQMAIL=$(which qmail)
+    CURRENTVERSION=$(qmail --version)
+    NEWVERSION=$(sh .qmail/qmail_newversion --version && rm .qmail/qmail_newversion)
+    
+    if [ "$CURRENTVERSION" = "$NEWVERSION" ]; then
+        echo "Version up to date." && exit
+    else
+        echo "$GETNEWVERSION" > "$WHICHQMAIL"
+    fi
+}
+
 view_email () {
     IFS=
     mkdir_qmail
@@ -204,6 +219,11 @@ then
     else
         view_email $2
     fi
+
+elif [[ $1 == '--update' ]]
+then
+    update
+fi
 
 #Display current email address
 elif [[ $1 == '-a' ]] || [[ $1 == '--address' ]]
