@@ -1,3 +1,6 @@
+#!/bin/bash
+# Author : mehtaarn000
+
 random_email () {
     mkdir_qmail
     #Generate a random email for the user
