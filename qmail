@@ -227,9 +227,9 @@ elif [[ $1 == '-r' ]] || [[ $1 == '--read' ]]
 then
     if [[ $3 == "--html" ]]
     then 
-        view_email $2 $3
+        view_email "$2" "$3"
     else
-        view_email $2
+        view_email "$2"
     fi
 
 elif [[ $1 == '-u' ]] || [[ $1 == '--update' ]]
