@@ -4,14 +4,14 @@
 random_email () {
     mkdir_qmail
     #Generate a random email for the user
-    USERNAME=$(cat /dev/urandom | LC_ALL=C tr -dc 'a-z1-9' | fold -w 8 | head -n 1)
-    DOMAIN_CHOICE=$(cat /dev/urandom | LC_ALL=C tr -dc '1-3' | fold -w 1 | head -n 1)
+    USERNAME=$(< /dev/urandom LC_ALL=C tr -dc 'a-z1-9' | fold -w 8 | head -n 1)
+    DOMAIN_CHOICE=$(< /dev/urandom LC_ALL=C tr -dc '1-3' | fold -w 1 | head -n 1)
 
-    if [ $DOMAIN_CHOICE == 1 ]
+    if [ "$DOMAIN_CHOICE" == 1 ]
     then
         DOMAIN="@1secmail.com"
         DOMAINWITHOUTAT="1secmail.com"
-    elif [ $DOMAIN_CHOICE == 2 ]
+    elif [ "$DOMAIN_CHOICE" == 2 ]
     then
         DOMAIN="@1secmail.org"
         DOMAINWITHOUTAT="1secmail.org"
@@ -20,27 +20,27 @@ random_email () {
         DOMAINWITHOUTAT="1secmail.net"
     fi
     ADDRESS="$USERNAME$DOMAIN"
-    cd .qmail
+    cd .qmail || exit
     :> domain.txt && :> email_addr.txt
     echo "qmail: Your temporary email address is: $ADDRESS"
     echo "$USERNAME" >> email_addr.txt && echo "$DOMAIN" >> domain.txt
     cd ..
     INITINBOXURL="https://www.1secmail.com/api/v1/?action=getMessages&login=$USERNAME&domain=$DOMAINWITHOUTAT"
-    RESPONSE=$(curl -sL $INITINBOXURL)
+    curl -sL "$INITINBOXURL"
 }
 
 download_attachment() {
-    EXISTINGEMAILADDR=`cat .qmail/email_addr.txt`
-    EXISTINGDOMAIN=`cat .qmail/domain.txt`
+    EXISTINGEMAILADDR=$(cat .qmail/email_addr.txt)
+    EXISTINGDOMAIN=$(cat .qmail/domain.txt)
     WITHOUTAT=${EXISTINGDOMAIN//@}
     DOWNLOADURL="https://www.1secmail.com/api/v1/?action=download&login=$EXISTINGEMAILADDR&domain=$WITHOUTAT&id=$1&file=$2"
-    echo $DOWNLOADURL
-    DOWNLOAD=$(curl -sL $DOWNLOADURL)
+    echo "$DOWNLOADURL"
+    DOWNLOAD=$(curl -sL "$DOWNLOADURL")
     if [[ $DOWNLOAD == "" ]]
     then
         echo "$0: this attachment does not exist." && exit 2
     else
-        echo "$DOWNLOAD" >> $2
+        echo "$DOWNLOAD" >> "$2"
     fi
 }
 
@@ -48,7 +48,7 @@ mkdir_qmail () {
     if [[ ! -d .qmail ]]
     then
         mkdir .qmail
-        cd .qmail
+        cd .qmail || exit
         touch email_addr.txt && touch domain.txt
         cd ..
         random_email
@@ -58,14 +58,14 @@ mkdir_qmail () {
 check_inbox () {
     mkdir_qmail
     #Get email address
-    cd .qmail
-    EXISTINGEMAILADDR=`cat email_addr.txt`
-    EXISTINGDOMAIN=`cat domain.txt`
+    cd .qmail || exit
+    EXISTINGEMAILADDR=$(cat email_addr.txt)
+    EXISTINGDOMAIN=$(cat domain.txt)
     WITHOUTAT=${EXISTINGDOMAIN//@}
     BASE_URL="https://www.1secmail.com/api/v1/?action=getMessages&login=$EXISTINGEMAILADDR&domain=$WITHOUTAT"
 
     #Get emails
-    LENGTH=$(curl -sL $BASE_URL | jq length)
+    LENGTH=$(curl -sL "$BASE_URL" | jq length)
     if [[ $LENGTH -eq 0 ]]
 
     #If there are no emails
@@ -78,13 +78,13 @@ check_inbox () {
         EXISTINGADDR="$EXISTINGEMAILADDR$EXISTINGDOMAIN"
         echo "-------------------Inbox of $EXISTINGADDR-------------------"
     fi
-    for (( i=0; i < $LENGTH; ++i ))
+    for (( i=0; i < LENGTH; ++i ))
     do
-        ID=$(curl -sL $BASE_URL | jq -r ".[$i] | .id")
-        FROM=$(curl -sL $BASE_URL | jq -r ".[$i] | .from")
-        SUBJECT=$(curl -sL $BASE_URL | jq -r ".[$i] | .subject")
-        DATE=$(curl -sL $BASE_URL | jq -r ".[$i] | .date")
-        printf "$ID        $FROM       $SUBJECT       $DATE\n"
+        ID=$(curl -sL "$BASE_URL" | jq -r ".[$i] | .id")
+        FROM=$(curl -sL "$BASE_URL" | jq -r ".[$i] | .from")
+        SUBJECT=$(curl -sL "$BASE_URL" | jq -r ".[$i] | .subject")
+        DATE=$(curl -sL "$BASE_URL" | jq -r ".[$i] | .date")
+        printf "%s" "$ID        $FROM       $SUBJECT       $DATE\n"
     done
     echo "--------------------------------------------------------------------"
     cd ..
@@ -92,10 +92,7 @@ check_inbox () {
 
 generate_and_store_addr () {
     mkdir_qmail
-    cd .qmail
-    CHECKADDR=`cat email_addr.txt`
-    CHECKDOMAIN=`cat domain.txt`
-    cd ..
+    cd .qmail || exit
     random_email
     check_inbox
 }
@@ -118,21 +115,21 @@ update () {
 view_email () {
     IFS=
     mkdir_qmail
-    cd .qmail
-    EXISTINGEMAILADDR=`cat email_addr.txt`
-    EXISTINGDOMAIN=`cat domain.txt`
+    cd .qmail || exit
+    EXISTINGEMAILADDR=$(cat email_addr.txt)
+    EXISTINGDOMAIN=$(cat domain.txt)
     WITHOUTAT=${EXISTINGDOMAIN//@}
     VIEWURL="https://www.1secmail.com/api/v1/?action=readMessage&login=$EXISTINGEMAILADDR&domain=$WITHOUTAT&id=$1"
-    REQUEST=$(curl -sL $VIEWURL)
+    REQUEST=$(curl -sL "$VIEWURL")
     if [[ $REQUEST == "Message not found" ]]
     then
         echo "qmail: Invalid Message ID" && exit 2
     fi
-    FROM=$(printf %s $REQUEST | jq -r ".from")
-    SUBJECT=$(printf %s $REQUEST | jq -r ".subject")
-    ATTACHMENTS=$(printf %s $REQUEST | jq -r ".attachments")
-    TEXTBODY=$(printf %s $REQUEST | jq -r ".textBody")
-    HTMLBODY=$(printf %s $REQUEST | jq -r ".htmlBody")
+    FROM=$(printf %s "$REQUEST" | jq -r ".from")
+    SUBJECT=$(printf %s "$REQUEST" | jq -r ".subject")
+    #ATTACHMENTS=$(printf %s "$REQUEST" | jq -r ".attachments")
+    TEXTBODY=$(printf %s "$REQUEST" | jq -r ".textBody")
+    HTMLBODY=$(printf %s "$REQUEST" | jq -r ".htmlBody")
     :> email.html
     HTMLEMAIL="$(cat <<EOL
     <b>FROM: </b> $FROM 
@@ -155,23 +152,21 @@ EOL
 
     if [[ $2 == '--html' ]] 
     then
-        echo $HTMLEMAIL >> email.html
+        echo "$HTMLEMAIL" >> email.html
         w3m email.html
     else
-        echo $TEXTEMAIL >> email.html
+        echo "$TEXTEMAIL" >> email.html
         w3m email.html
     fi
 
-    cd ..
 }
 
 echo_addr () {
     mkdir_qmail
-    cd .qmail
-    EXISTINGEMAILADDR=`cat email_addr.txt`
-    EXISTINGDOMAIN=`cat domain.txt`
-    echo $EXISTINGEMAILADDR$EXISTINGDOMAIN
-    cd ..
+    cd .qmail || exit
+    EXISTINGEMAILADDR=$(cat email_addr.txt)
+    EXISTINGDOMAIN=$(cat domain.txt)
+    echo "$EXISTINGEMAILADDR""$EXISTINGDOMAIN"
 }
 
 #HELP Page
@@ -207,7 +202,7 @@ then
 
 elif [[ $1 == '-c' ]] || [[ $1 == '--custom' ]]
 then
-    CUSTOMADDR=(${2//@/ })
+    CUSTOMADDR=${2//@/ }
     SPLITTHIS=${2#*@}
     CUSTOMDOTX=${SPLITTHIS#*.}
     CUSTOMDOMAIN=${SPLITTHIS%.*}
@@ -223,9 +218,9 @@ then
     then
         echo "qmail: Your custom email address's domain .___ must be: '.net' or '.org' or '.com'" && exit 2
     fi
-    cd .qmail
+    cd .qmail || exit
     :> domain.txt && :> email_addr.txt
-    echo $CUSTOMADDR >> email_addr.txt && echo "@$CUSTOMDOMAIN.$CUSTOMDOTX" >> domain.txt
+    echo "$CUSTOMADDR" >> email_addr.txt && echo "@$CUSTOMDOMAIN.$CUSTOMDOTX" >> domain.txt
     
 #View Emails
 elif [[ $1 == '-r' ]] || [[ $1 == '--read' ]]
@@ -237,14 +232,14 @@ then
         view_email $2
     fi
 
-elif [[ $1 == '-u' ]]  [[ $1 == '--update' ]]
+elif [[ $1 == '-u' ]] || [[ $1 == '--update' ]]
 then
     update
-fi
+
 #Download attachment
 elif [[ $1 == "-d" ]] || [[ $1 == "--download" ]]
 then
-    download_attachment $2 $3
+    download_attachment "$2" "$3"
 
 #Display current email address
 elif [[ $1 == '-a' ]] || [[ $1 == '--address' ]]
